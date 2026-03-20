@@ -19,7 +19,7 @@ use App\Http\Controllers\Api\TruckController;
 use App\Http\Controllers\Api\TruckDriverHistoryController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SettingController;
-use Illuminate\Http\Request;           // ✅ AJOUT : import manquant
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -42,7 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
-    // Sites (✅ middleware redondant retiré)
+    // Sites
     Route::get('/sites-list', [SiteController::class, 'list']);
     Route::get('/sites/stats', [SiteController::class, 'stats']);
     Route::get('/sites/nearby', [SiteController::class, 'nearby']);
@@ -51,7 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/sites/{site}/toggle-active', [SiteController::class, 'toggleActive']);
     Route::apiResource('sites', SiteController::class);
     Route::get('/my-sites', [SiteController::class, 'mySites']);
-    Route::post('/switch-site/{site}', [SiteController::class, 'switchSite']); // ✅ une seule route switch-site
+    Route::post('/switch-site/{site}', [SiteController::class, 'switchSite']);
 
     // Emplacements
     Route::get('/locations', [LocationController::class, 'index']);
@@ -63,13 +63,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/locations/{location}', [LocationController::class, 'destroy']);
 
     // Equipments
+    // ⚠️ Les routes nommées (export, import) doivent être déclarées AVANT
+    //    apiResource pour ne pas être interceptées par show({equipment}).
+    Route::get('/equipments/export', [EquipmentController::class, 'export']);   // ← EXPORT
+    Route::post('/equipments/import', [EquipmentController::class, 'import']);  // ← IMPORT
     Route::apiResource('equipments', EquipmentController::class);
 
     // Parts (Pièces)
     Route::post('/parts/{part}/adjust-stock', [PartController::class, 'adjustStock']);
     Route::apiResource('parts', PartController::class);
 
-    // Work Orders (OT) (✅ middleware redondant retiré)
+    // Work Orders (OT)
     Route::get('/work-orders/stats', [WorkOrderController::class, 'stats']);
     Route::post('/work-orders/{workOrder}/status', [WorkOrderController::class, 'updateStatus']);
     Route::post('/work-orders/{workOrder}/start', [WorkOrderController::class, 'start']);
@@ -87,7 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('work-orders', WorkOrderController::class);
 
     // Users (Utilisateurs)
-    Route::get('/user-roles', [UserController::class, 'getRoles']); // ✅ renommé pour éviter conflit avec apiResource roles
+    Route::get('/user-roles', [UserController::class, 'getRoles']);
     Route::post('/users/{user}/roles', [UserController::class, 'updateRoles']);
     Route::post('/users/{user}/change-password', [UserController::class, 'changePassword']);
     Route::apiResource('users', UserController::class);
@@ -97,7 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/permissions', [RoleController::class, 'permissions']);
     Route::apiResource('roles', RoleController::class);
 
-    // Intervention Requests (DI) (✅ middleware redondant retiré)
+    // Intervention Requests (DI)
     Route::get('/intervention-requests/stats', [InterventionRequestController::class, 'stats']);
     Route::post('/intervention-requests/{interventionRequest}/approve', [InterventionRequestController::class, 'approve']);
     Route::post('/intervention-requests/{interventionRequest}/reject', [InterventionRequestController::class, 'reject']);
@@ -108,7 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/trucks/{truck}/intervention-requests', [InterventionRequestController::class, 'forTruck']);
     Route::apiResource('intervention-requests', InterventionRequestController::class);
 
-    // Preventive Maintenance (MP) (✅ middleware redondant retiré)
+    // Preventive Maintenance (MP)
     Route::get('/preventive-maintenances/stats', [PreventiveMaintenanceController::class, 'stats']);
     Route::get('/preventive-maintenances/calendar', [PreventiveMaintenanceController::class, 'calendar']);
     Route::get('/preventive-maintenances/upcoming', [PreventiveMaintenanceController::class, 'upcoming']);
@@ -120,7 +124,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('preventive-maintenances', PreventiveMaintenanceController::class);
 
     // Génération manuelle des OT préventifs (admin uniquement)
-    Route::post('/preventive-maintenances/generate-all', function (Request $request) { // ✅ Request maintenant importé
+    Route::post('/preventive-maintenances/generate-all', function (Request $request) {
         if (!$request->user()->hasRole('SuperAdmin')) {
             abort(403, 'Accès réservé aux super administrateurs');
         }
@@ -131,7 +135,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         return response()->json([
             'message' => 'Génération terminée',
-            'output' => \Illuminate\Support\Facades\Artisan::output(),
+            'output'  => \Illuminate\Support\Facades\Artisan::output(),
         ]);
     });
 
